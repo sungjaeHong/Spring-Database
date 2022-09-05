@@ -9,10 +9,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.NoSuchElementException;
 
 /**
  * Created by peter on 2022/07/16
- * JDBC - DriverManager 사
+ * JDBC - DriverManager 사용
  */
 
 @Slf4j
@@ -24,10 +25,11 @@ public class MemberRepositoryV0 {
         PreparedStatement preparedStatement = null;
 
         try {
-            connection = DBConnectionUtil.getConnection();
+            connection = getConnection();
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, member.getMemberId());
             preparedStatement.setInt(2, member.getMoney());
+            preparedStatement.execute();
             return member;
         } catch (SQLException e) {
             log.error("DB error", e);
@@ -35,6 +37,37 @@ public class MemberRepositoryV0 {
         } finally {
             close(connection, preparedStatement, null);
         }
+    }
+
+    public Member findById(String memberId) throws SQLException {
+        String sql = "select * from member where member_id = ?";
+        Connection connection = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            connection = getConnection();
+            pstmt = connection.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+            rs = pstmt.executeQuery();
+            System.out.println(rs);
+            if (rs.next()) {
+                Member member = new Member(rs.getString("member_id"), rs.getInt("money"));
+                return member;
+            } else {
+                throw new NoSuchElementException();
+            }
+
+        } catch (SQLException e) {
+            log.error("db error");
+            throw e;
+        } finally {
+            close(connection, pstmt, rs);
+        }
+    }
+
+    private Connection getConnection() {
+        return DBConnectionUtil.getConnection();
     }
 
     private void close(Connection connection, Statement statement, ResultSet resultSet) {
