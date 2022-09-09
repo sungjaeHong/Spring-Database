@@ -50,7 +50,6 @@ public class MemberRepositoryV0 {
             pstmt = connection.prepareStatement(sql);
             pstmt.setString(1, memberId);
             rs = pstmt.executeQuery();
-            System.out.println(rs);
             if (rs.next()) {
                 Member member = new Member(rs.getString("member_id"), rs.getInt("money"));
                 return member;
@@ -63,6 +62,27 @@ public class MemberRepositoryV0 {
             throw e;
         } finally {
             close(connection, pstmt, rs);
+        }
+    }
+
+    public void update(String memberId, int money) throws SQLException{
+        String sql = "update member set money = ? where member_id = ?";
+        Connection connection = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            connection = getConnection();
+            pstmt = connection.prepareStatement(sql);
+            pstmt.setInt(1, money);
+            pstmt.setString(2, memberId);
+            int resultSize = pstmt.executeUpdate();
+            log.info("result size={}", resultSize);
+        } catch (SQLException e) {
+            log.error("DB error", e);
+            throw e;
+        } finally {
+            close(connection, pstmt, null);
         }
     }
 
